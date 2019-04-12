@@ -37,16 +37,16 @@ void level_print(list memtable, list *level, int level_num)
     cout << "----------" << endl;
 }
 
-int* level_sst_size_tok(int level_num, char *lss_str)
+int* tok(int num, char *str)
 {
-    int *level_sst_size = new int(level_num);
-    char* tok = strtok(lss_str,",");
-    for(int i=0;i<level_num;i++) {
-        level_sst_size[i] = atoi(tok);
+    int *arr = new int[num];
+    char *tok = strtok(str,",");
+    for(int i=0; i<num; i++) {
+        arr[i] = atoi(tok);
         tok = strtok(NULL,",");
     }
 
-    return level_sst_size;
+    return arr;
 }
 
 void random_arr(int *input_arr, int num)
@@ -71,7 +71,8 @@ int main(int argc, char **argv)
     int level_num = 0; // # of Level ex) 3 / l
     int *level_sst_size; // Size of SSTable ex) 2,4,8 / s
     char *lss_str;
-    int input_key = 0; // input keys ex) 1~32 / k
+    int *input_key;
+    char *input_str; // input keys ex) 1~32 / k
     int sst_size = 0; // # of keys in SSTable ex) 4 / n
     char *type; // type ex) r / t
 
@@ -87,7 +88,8 @@ int main(int argc, char **argv)
                 lss_str = optarg;
                 break;
             case 'k':
-                input_key = atoi(optarg);
+                //input_key = atoi(optarg);
+                input_str = optarg;
                 break;
             case 'n':
                 sst_size = atoi(optarg);
@@ -102,19 +104,24 @@ int main(int argc, char **argv)
                 break;
         }
     }
+
+    // input_str => input_key 
+    input_key = tok(2, input_str);
     
     // type check
-    int *input_arr = new int[input_key+1];
-    for(int i=0; i<input_key; i++)
-        input_arr[i] = i+1;
+    int arr_num = input_key[0]*input_key[1];
+    int *input_arr = new int[arr_num+1]; 
+    for(int i=0; i<input_key[1]; i++)
+        for(int j=0+(input_key[0]*i); j<input_key[0]+(input_key[0]*i); j++) 
+            input_arr[j] = (j+1)-(input_key[0]*i);
 
     if(strcmp(type, "r") == 0)
-        random_arr(input_arr, input_key);
+        random_arr(input_arr, arr_num);
 
-    input_arr[input_key] = 0;
+    input_arr[arr_num] = 0;
 
     // level_sst_size tok
-    level_sst_size = level_sst_size_tok(level_num, lss_str);
+    level_sst_size = tok(level_num, lss_str);
 
     // level create 
     list memtable;
@@ -125,7 +132,7 @@ int main(int argc, char **argv)
     int all_cpt_sst_cnt = 0;
 
     // input key range
-    for(int i=0; i<=input_key; i++) {
+    for(int i=0; i<=arr_num; i++) {
         if(memtable.head == NULL || memtable.get_keycnt(memtable.tail) == sst_size) {
             // flush, key data sort
             if(memtable.get_size() == 1) {
@@ -150,6 +157,7 @@ int main(int argc, char **argv)
 
                         // compaction check true / merge sort compaction
                         if(cpt_check) {
+                            cout << "compaction!!!" << endl;
                             // compaction execution
                             compaction_exec(level, cpt, j, vec, sst_size);
 
@@ -173,7 +181,7 @@ int main(int argc, char **argv)
 
         // key insert
         memtable.key_push(memtable.head, input_arr[i]);
-        //level_print(memtable, level, level_num);
+        level_print(memtable, level, level_num);
     } 
 
     level_print(memtable, level, level_num);

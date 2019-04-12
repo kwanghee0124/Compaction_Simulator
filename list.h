@@ -1,10 +1,12 @@
 #ifndef LIST_H
 #define LIST_H
 
+#include <vector>
+
 class sstable
 {
 private:
-    int *key;
+    std::vector<int> key;
     int sst_size;
     int key_cnt;
 
@@ -12,6 +14,7 @@ public:
     sstable();
     sstable(int sst_size);
     sstable *next;
+    sstable *prev;
     sstable *cpt_next;
     friend class list;
 };
@@ -39,6 +42,8 @@ public:
     void push(sstable *target);
     sstable *pop();
     sstable *flush();
+    void erase_back();
+    void erase(sstable *target);
 
     void init();
     void cpt_init();

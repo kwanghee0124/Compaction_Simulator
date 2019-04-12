@@ -5,24 +5,16 @@
 using namespace std;
 
 sstable::sstable() : sst_size(1), key_cnt(0)
-{
-    key = new int[sst_size];
-    
-    for(int i=0; i<sst_size; i++)
-        key[i] = 0;
-
-    next = NULL;
+{ 
+    key.clear();
+    next = prev = NULL;
     cpt_next = NULL;
 }
 
 sstable::sstable(int sst_size) : sst_size(sst_size), key_cnt(0)
 {
-    key = new int[sst_size];
-    
-    for(int i=0; i<sst_size; i++)
-        key[i] = 0;
-
-    next = NULL;
+    key.clear();
+    next = prev = NULL;
     cpt_next = NULL;
 }
 
@@ -44,11 +36,12 @@ int list::get_size()
 void list::create(int sst_size)
 {
     sstable *newsst = new sstable(sst_size);
-    
+
     if(head == NULL) {
         head = newsst;
     } else {
         tail->next = newsst;
+        newsst->prev = tail;
     }
     tail = newsst;
     size++;
@@ -56,13 +49,13 @@ void list::create(int sst_size)
 
 void list::key_push(sstable *target, int k)
 {
-   if(target->sst_size <= target->key_cnt) {
-       cout << "KEY_SIZE FULL" << endl;
-       return;
-   }
+    if(target->sst_size <= target->key_cnt) {
+        cout << "KEY_SIZE FULL" << endl;
+        return;
+    }
 
-   target->key[target->key_cnt] = k;
-   target->key_cnt++;
+    target->key.push_back(k);
+    target->key_cnt++;
 }
 
 int list::key_pop(sstable *target)
@@ -73,12 +66,10 @@ int list::key_pop(sstable *target)
         cout << "KEY_SIZE ZERO" << endl;
         return -1;
     }
-    
-    tmp = target->key[0];
+
+    tmp = target->key.front();
+    target->key.erase(target->key.begin());
     target->key_cnt--;
-    for(int i=1;i<=target->key_cnt;i++)
-        target->key[i-1] = target->key[i];
-    target->key[target->key_cnt+1] = 0;
 
     return tmp;
 }
@@ -94,13 +85,13 @@ void list::cpt_push(sstable *target)
     size++;
 }
 
-
 void list::push(sstable *target)
 {
     if(head == NULL) {
         head = target;
     } else {
         tail->next = target;
+        target->prev = tail;
     }
     tail = target;
     size++;
@@ -109,30 +100,84 @@ void list::push(sstable *target)
 sstable *list::pop()
 {
     if(head != NULL) {
-       sstable *target = head;
+        sstable *target = head;
 
-       head = head->next;
-       if(head == NULL) tail = NULL;
-       target->next = NULL;
+        head = head->next;
 
-       size--;
-       return target;
+        if(head == NULL) tail = NULL;
+        else head->prev = NULL;
+
+        target->next = NULL;
+
+        size--;
+        return target;
     }
+    cout << "POP : LIST NULL" << endl;
 }
 
 sstable *list::flush()
 {
     if(head != NULL) {
-       sstable *target = head;
+        sstable *target = head;
 
-       head = head->next;
-       if(head == NULL) tail = NULL;
-       target->next = NULL;
+        head = head->next;
 
-       sort(target->key, target->key+target->sst_size);
+        if(head == NULL) tail = NULL;
+        else head->prev = NULL;
 
-       size--;
-       return target;
+        target->next = NULL;
+
+        sort(target->key.begin(), target->key.end());
+
+        size--;
+        return target;
+    }
+    cout << "FLUSH : LIST NULL" << endl;
+}
+
+void list::erase_back()
+{
+    if(head != NULL) {
+        sstable *target = tail;
+
+        tail = tail->prev;
+
+        if(tail == NULL) head = NULL;
+        else tail->next = NULL;
+
+        delete target;
+        size--;
+    }
+}
+
+void list::erase(sstable *target)
+{
+    if(head != NULL) {
+        if(size == 1) {
+            head = NULL;
+            tail = NULL;
+        } else {
+            if(target == head) {
+                head = head->next;
+
+                head->prev = NULL;
+                target->next = NULL;
+            } else if(target == tail) {
+                tail = tail->prev;
+
+                tail->next = NULL;
+                target->prev = NULL;
+            } else {
+                target->prev->next = target->next;
+                target->next->prev = target->prev;
+
+                target->next = NULL;
+                target->prev = NULL;
+            }
+        }
+
+        delete target;
+        size--;
     }
 }
 
@@ -148,7 +193,7 @@ void list::cpt_init()
 
     while(scan != NULL) {
         scan->cpt_next = NULL;
-        
+
         scan = scan->next;
     }
 }
@@ -159,7 +204,7 @@ void list::print()
 
     while(scan != NULL) {
         cout << "[ ";
-        for(int i=0; i < scan->sst_size; i++) {
+        for(int i=0; i<scan->key.size(); i++) {
             cout << scan->key[i] << " ";
         }
         cout << "] ";
@@ -174,7 +219,7 @@ void list::cpt_print()
 
     while(scan != NULL) {
         cout << "[ ";
-        for(int i=0; i < scan->sst_size; i++) {
+        for(int i=0; i < scan->key.size(); i++) {
             cout << scan->key[i] << " ";
         }
         cout << "] ";

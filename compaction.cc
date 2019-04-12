@@ -16,7 +16,7 @@ bool compaction_check(list *level, list &cpt, int lnum, vector<int> &vec, int ss
     while(scan != NULL) {
         for(int i=key_init; i<sst_size; i++) {
             if((level[lnum].key_data(level[lnum].head, i) >= level[lnum+1].key_data(scan, 0))
-                    && (level[lnum].key_data(level[lnum].head, i) <= level[lnum+1].key_data(scan, sst_size-1))) {
+                    && (level[lnum].key_data(level[lnum].head, i) <= level[lnum+1].key_data(scan, level[lnum+1].get_keycnt(scan)-1))) {
                 key_init++;
                 check = true;
             }
@@ -50,13 +50,25 @@ void compaction_exec(list *level, list &cpt, int lnum, vector<int> &vec, int sst
     // sort
     sort(vec.begin(), vec.end());
 
+    // update key check
+    vec.erase(unique(vec.begin(), vec.end()), vec.end());
+    
     // compaction sort data input
     while(scan != NULL) {
-        for(int i=0; i<sst_size; i++) {
-            cpt.key_push(scan, vec.front());
-            vec.erase(vec.begin());
+        if(!vec.size()) {
+            level[lnum+1].erase(scan);
+        } else {
+            int size = 0;
+
+            if(vec.size() > sst_size) size = sst_size;
+            else size = vec.size();
+
+            for(int i=0; i<size; i++) {
+                cpt.key_push(scan, vec.front());
+                vec.erase(vec.begin());
+            }
+            write_cnt++;
         }
-        write_cnt++;
         scan = scan->cpt_next;
     }
     write_cnt--;

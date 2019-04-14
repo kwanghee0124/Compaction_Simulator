@@ -1,12 +1,13 @@
 # Compaction_Simulator
 
-======struct=======
+
+##struct
 
 [sub] int key[]
 [add] vector<int> key
 [add] sstable prev
 
-======function=====
+##function
 
 [add] update
 

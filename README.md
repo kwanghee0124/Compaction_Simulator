@@ -1,6 +1,6 @@
 # Compaction_Simulator
 
------struct-----
+-----struct------
 -int key[]
 +vector<int> key
 +sstable prev

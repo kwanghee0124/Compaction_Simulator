@@ -1,13 +1,16 @@
 # Compaction_Simulator
 
 
-##struct
+## struct
 
-[sub] int key[]
-[add] vector<int> key
-[add] sstable prev
+#### sub
+    int key[]
+#### add
+    vector key
+    sstable prev
 
-##function
+## function
 
-[add] update
+#### add
+    update
 

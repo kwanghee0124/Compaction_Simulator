@@ -54,6 +54,7 @@ void random_arr(int *input_arr, int num)
     int temp = 0;
     int n = 0;
 
+    sleep(1);
     srand((unsigned int)time(0));
 
     for(int i=0; i<num; i++) {
@@ -88,7 +89,6 @@ int main(int argc, char **argv)
                 lss_str = optarg;
                 break;
             case 'k':
-                //input_key = atoi(optarg);
                 input_str = optarg;
                 break;
             case 'n':
@@ -110,13 +110,22 @@ int main(int argc, char **argv)
     
     // type check
     int arr_num = input_key[0]*input_key[1];
-    int *input_arr = new int[arr_num+1]; 
-    for(int i=0; i<input_key[1]; i++)
-        for(int j=0+(input_key[0]*i); j<input_key[0]+(input_key[0]*i); j++) 
-            input_arr[j] = (j+1)-(input_key[0]*i);
+    int *input_arr = new int[arr_num+1];
+    int *ran_arr = new int[input_key[0]];
 
-    if(strcmp(type, "r") == 0)
-        random_arr(input_arr, arr_num);
+    for(int i=0; i<input_key[1]; i++) {
+        for(int j=0+(input_key[0]*i); j<input_key[0]+(input_key[0]*i); j++) {
+            if(strcmp(type, "r") == 0)
+                ran_arr[j-(input_key[0]*i)] = (j+1)-(input_key[0]*i);
+            else
+                input_arr[j] = (j+1)-(input_key[0]*i);
+        }
+        if(strcmp(type, "r") == 0) {
+            random_arr(ran_arr, input_key[0]);
+            for(int j=0+(input_key[0]*i); j<input_key[0]+(input_key[0]*i); j++)
+                input_arr[j] = ran_arr[j-(input_key[0]*i)];
+        }
+    }
 
     input_arr[arr_num] = 0;
 
@@ -157,7 +166,6 @@ int main(int argc, char **argv)
 
                         // compaction check true / merge sort compaction
                         if(cpt_check) {
-                            cout << "compaction!!!" << endl;
                             // compaction execution
                             compaction_exec(level, cpt, j, vec, sst_size);
 
@@ -171,7 +179,7 @@ int main(int argc, char **argv)
                 }
             }
 
-            // last level limit
+            // last level limit / merge compaction
             //if(level[level_num-1].get_size() > level_sst_size[level_num-1])
             //    level[level_num-1].pop();
 
@@ -181,7 +189,7 @@ int main(int argc, char **argv)
 
         // key insert
         memtable.key_push(memtable.head, input_arr[i]);
-        level_print(memtable, level, level_num);
+        //level_print(memtable, level, level_num);
     } 
 
     level_print(memtable, level, level_num);

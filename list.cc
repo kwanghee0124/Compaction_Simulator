@@ -1,6 +1,7 @@
 #include <iostream>
 #include <algorithm>
 #include "list.h"
+#include "compaction.h"
 
 using namespace std;
 
@@ -108,6 +109,7 @@ sstable *list::pop()
         else head->prev = NULL;
 
         target->next = NULL;
+        target->prev = NULL;
 
         size--;
         return target;
@@ -126,6 +128,7 @@ sstable *list::flush()
         else head->prev = NULL;
 
         target->next = NULL;
+        target->prev = NULL;
 
         sort(target->key.begin(), target->key.end());
 
@@ -135,22 +138,7 @@ sstable *list::flush()
     cout << "FLUSH : LIST NULL" << endl;
 }
 
-void list::erase_back()
-{
-    if(head != NULL) {
-        sstable *target = tail;
-
-        tail = tail->prev;
-
-        if(tail == NULL) head = NULL;
-        else tail->next = NULL;
-
-        delete target;
-        size--;
-    }
-}
-
-void list::erase(sstable *target)
+sstable *list::erase(sstable *target)
 {
     if(head != NULL) {
         if(size == 1) {
@@ -175,9 +163,8 @@ void list::erase(sstable *target)
                 target->prev = NULL;
             }
         }
-
-        delete target;
         size--;
+        return target;
     }
 }
 

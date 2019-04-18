@@ -42,8 +42,7 @@ public:
     void push(sstable *target);
     sstable *pop();
     sstable *flush();
-    void erase_back();
-    void erase(sstable *target);
+    sstable *erase(sstable *target);
 
     void init();
     void cpt_init();
